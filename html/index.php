@@ -2,7 +2,7 @@
 	session_start();
 	require_once '../denki/vendor/autoload.php';
 ?>
-
+<meta charset="utf-8">
  <?php
   $sudo_passwd = ""; // todo: add to a future config.json
 
@@ -104,10 +104,10 @@ function handle_first_time() {
   // set the sudo mode to true because we're in development here!
   $_SESSION['sudo']=true;
   $Parsedown = new Parsedown();
-  echo $GLOBALS["denki_text_strings"]["en-gb"];
+  // echo $GLOBALS["denki_text_strings"]["en-gb"];
   render_basic_modal(
       $Parsedown->text(d_textstring("setup1")).
-      '<form action="?config&init" method="post">
+      '<form action="?config=config&init" method="post">
       Enter your site name: <input name="config_site_name" type="text" placeholder="Site name"/><br>
       Enter your sudo password: <input name="config_sudo_passwd" type="text" placeholder="toor"/><br>
       <button type="submit">Submit</button>
@@ -115,6 +115,26 @@ function handle_first_time() {
   die($setup_str);
 }
 
+  if (isset($_GET['config'])) {
+    $Parsedown = new Parsedown();
+    needs_sudo_or_else();
+    $GLOBALS["config"]["site_name"] = $_POST["config_site_name"];
+    $GLOBALS["config"]["sudo_passwd"] = sha1($_POST["config_sudo_passwd"]);
+    if (isset($_GET["init"])) {
+      $GLOBALS["config"]["denki_dir"] = "../denki/";
+      // echo json_encode($GLOBALS["config"]);
+      mkdir(get_ddir("pages"));
+      file_put_contents(get_ddir("config.json"), json_encode($GLOBALS["config"]));
+      // chmod(get_ddir("./pages/*"), 0777);
+      file_put_contents(get_ddir("pages/index.md"), d_textstring("placeholder_index"));
+      file_put_contents(get_ddir("pages/sidebar.md"), d_textstring("placeholder_sidebar"));
+      file_put_contents(get_ddir(".denki_init"),"done");
+      render_basic_modal($Parsedown->text(d_textstring("setup2"))."<meta http-equiv='refresh' content='2;url=./'>");
+      die("");
+    } else {
+      echo "Changes saved to the denki config!";
+    }
+  }
   if (file_exists(get_ddir("pages/index.md"))) {
     // echo handle_page($GLOBALS["page"]);
   } else {
@@ -158,7 +178,7 @@ function handle_first_time() {
   function handle_render() {
     // this currently handles ALL action code which is a bit stupid.
     // TODO: Change this.
-    if (isset($_SESSION['sudo'])&&isset($_GET['sudo'])) { die("You are now logged in!");}
+    if (isset($_SESSION['sudo'])&&isset($_GET['sudo'])) { die("You are now logged in!<meta http-equiv='refresh' content='2;url=./'>");}
     switch ($GLOBALS["action"]) {
         case 'config':
           break;
@@ -187,7 +207,7 @@ function handle_first_time() {
           break;
         case 'sudo_exit':
           session_destroy();
-          die("You are now logged out. :-(");
+          die("You are now logged out. :-(<meta http-equiv='refresh' content='1;url=./'>");
           break;
         case 'sudo_auth':
           echo '<form class="login" method="POST" action="?sudo">
@@ -257,31 +277,13 @@ function handle_first_time() {
       // echo system ("git add .; git commit -m 'test'; git push");
       die("git not working yet!");
   }
-  if (isset($_GET['config'])) {
-    needs_sudo_or_else();
-    $GLOBALS["config"]["site_name"] = $_POST["config_site_name"];
-    $GLOBALS["config"]["sudo_passwd"] = sha1($_POST["config_sudo_passwd"]);
-    if (isset($_GET["init"])) {
-      $GLOBALS["config"]["denki_dir"] = "../denki/";
-      // echo json_encode($GLOBALS["config"]);
-      mkdir(get_ddir("pages"));
-      file_put_contents(get_ddir("config.json"), json_encode($GLOBALS["config"]));
-      // chmod(get_ddir("./pages/*"), 0777);
-      file_put_contents(get_ddir("config.json"), "{}");
-      file_put_contents(get_ddir("pages/index.md"), d_textstring("placeholder_index"));
-      file_put_contents(get_ddir("pages/sidebar.md"), d_textstring("placeholder_sidebar"));
-      file_put_contents(get_ddir(".denki_init"),"done");
-      render_basic_modal($Parsedown->text(d_textstring("setup2"))."<meta http-equiv='refresh' content='2;url=./'>");
-    } else {
-      echo "Changes saved to the denki config!";
-    }
-  }
   if (isset($_GET['sudo'])) {
     // sudo code
     // messy but it works here
     if(isset($_POST['pass'])) {
       if (sha1($_POST['pass'])==$GLOBALS["config"]["sudo_passwd"]) {
         $_SESSION['sudo']=true;
+        // handle_death("<meta http-equiv='refresh' content='0;url=./'>");
       }
     }
   } else {
