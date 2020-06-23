@@ -12,7 +12,7 @@
   </head>
   <body>
 
-<header><h1><a href="./">🎵 <?php echo $config["site_name"]; ?> 🎵</a></h1></header>
+<header><h1><a href="./"><?php echo $config["site_name"]; ?></a></h1></header>
     
  
 

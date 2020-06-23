@@ -1,4 +1,6 @@
 {
+	"name":"02380/denki",
+	"version":"1.0.0",
     "require": {
         "erusev/parsedown": "^1.7"
     }
