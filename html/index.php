@@ -17,6 +17,21 @@
     "denki_dir" => "../denki/",
     "sudo_passwd" => ""
   ];
+  function get_ddir($x) {
+    return $GLOBALS["config"]["denki_dir"].$x;
+  }
+
+  if(file_exists(get_ddir(".denki_init"))) {
+    $x = json_decode(file_get_contents(get_ddir("config.json")),true);
+    if (isset($x["denki_dir"])) {
+      $GLOBALS["config"] = $x;
+    }
+  }
+
+  if(file_exists("composer.json") {
+    // if running in merged folder, then auto change the denki dir to the local!
+    $GLOBALS["denki_dir"] = "./";
+  }
 
   function getDirContents($dir, &$results = array()) {
       $files = scandir($dir);
@@ -34,17 +49,46 @@
       return $results;
   }
 
-  function get_ddir($x) {
-    return $GLOBALS["config"]["denki_dir"].$x;
-  }
 
   function handle_first_time() {
-    chmod("./", 0777);
+    // when you run denki on a clean install you should see thuis page.
+    // set the sudo mode to true because we're in development here!
+     $_SESSION['sudo']=true;
+    $setup_str = <<<EOD
+  <main>
+    <h2>Denki setup procedure</h2>
+    <p>Welcome to Denki - the barebones Markdown-powered site renderer.</p>
+    <p>You need to fill in some details and set up a sudo password. There are currently no users or permissions with Denki.</p>
+    <form action="?action=config&init" method="post">
+    Enter your site name: <input name="config_site_name" type="text" placeholder="Site name"/><br>
+    Enter your sudo password: <input name="config_sudo_passwd" type="text" placeholder="toor"/><br>
+    <button type="submit">Submit</button>
+    </form>
+  </main>
+  <style>body {-webkit-font-smoothing: antialiased;-moz-osx-font-smoothing: grayscale;text-rendering: optimizeLegibility;background: #222;font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue',Helvetica,sans-serif;margin: 0;padding: 0;}
+main {
+  margin-left: auto;
+  margin-right: auto;
+  width: 40%;
+  background: #333;
+  padding: 12px;
+  color: white;
+  font-weight: 100;
+  margin-top: 12px;
+  text-align:center;
+}
+form {
+  width:100%;
+  text-align:left;
+}
+  </style>
+EOD;
     mkdir(get_ddir("pages"));
-    chmod(get_ddir("./pages/*"), 0777);
-    file_put_contents(get_ddir("pages/config.json"), "{}");
+    // chmod(get_ddir("./pages/*"), 0777);
+    file_put_contents(get_ddir("config.json"), "{}");
     file_put_contents(get_ddir("pages/index.md"), "Welcome to your new blank wiki!");
     file_put_contents(get_ddir("pages/sidebar.md"), "Welcome to your new blank wiki!");
+    die($setup_str);
   }
 
   if (file_exists(get_ddir("pages/index.md"))) {
@@ -88,8 +132,24 @@
 
 
   function handle_render() {
+    // this currently handles ALL action code which is a bit stupid.
+    // TODO: Change this.
     if (isset($_SESSION['sudo'])&&isset($_GET['sudo'])) { die("You are now logged in!");}
     switch ($GLOBALS["action"]) {
+        case 'config':
+          needs_sudo_or_else();
+          $GLOBALS["config"]["site_name"] = $_POST["config_site_name"];
+          $GLOBALS["config"]["sudo_passwd"] = sha1($_POST["config_sudo_passwd"]);
+          $GLOBALS["config"]["denki_dir"] = "../denki/";
+          // echo json_encode($GLOBALS["config"]);
+          file_put_contents(get_ddir("config.json"), json_encode($GLOBALS["config"]));
+          if (isset($_GET["init"])) {
+            file_put_contents(get_ddir(".denki_init"),"done");
+            echo "Changes saved to the denki config! Welcome!";
+          } else {
+            echo "Changes saved to the denki config!";
+          }
+          break;
         case 'change':
           file_put_contents(get_ddir("pages/".$GLOBALS["page"].".md"), $_POST['text_to_store']);
           # code...
@@ -189,7 +249,7 @@
     // sudo code
     // messy but it works here
     if(isset($_POST['pass'])) {
-      if (sha1($_POST['pass'])==$sudo_passwd) {
+      if (sha1($_POST['pass'])==$GLOBALS["config"]["sudo_passwd"]) {
         $_SESSION['sudo']=true;
       }
     }
@@ -200,10 +260,10 @@
     }
     else {
       $GLOBALS["action"] = 'view';
+      $GLOBALS["page"] = 'index';
       if (isset($_GET['action'])) {
           $GLOBALS["action"] = $_GET['action'];
       }
-      $GLOBALS["page"] = 'index';
       if (isset($_GET['page'])) {
           $GLOBALS["page"] = $_GET['page'];
       }
