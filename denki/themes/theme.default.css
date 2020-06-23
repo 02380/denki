@@ -1,8 +1,13 @@
 body {
 	background: #222;
-	font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue',Helvetica,sans-serif;
 	margin: 0;
 	padding: 0;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue',Helvetica,sans-serif;
+  /*background: black;*/
+  /*color:white !important;*/
 }
 .sudo-pages {
   
