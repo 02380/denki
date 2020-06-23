@@ -28,7 +28,7 @@
     }
   }
 
-  if(file_exists("composer.json") {
+  if(file_exists("composer.json")) {
     // if running in merged folder, then auto change the denki dir to the local!
     $GLOBALS["denki_dir"] = "./";
   }
@@ -87,7 +87,7 @@ EOD;
     // chmod(get_ddir("./pages/*"), 0777);
     file_put_contents(get_ddir("config.json"), "{}");
     file_put_contents(get_ddir("pages/index.md"), "Welcome to your new blank wiki!");
-    file_put_contents(get_ddir("pages/sidebar.md"), "Welcome to your new blank wiki!");
+    file_put_contents(get_ddir("pages/sidebar.md"), "* Edit me in sudo mode!");
     die($setup_str);
   }
 
@@ -170,8 +170,8 @@ EOD;
               
           }
           echo "</div>";
-          echo "<div class='sudo-pages'><h1>Sudo 2</h1><ul>";
-          echo "</div>";
+          // echo "<div class='sudo-pages'><h1>Sudo 2</h1><ul>";
+          // echo "</div>";
           break;
         case 'sudo_exit':
           session_destroy();
@@ -217,7 +217,7 @@ EOD;
 
   function handle_sidebar_sudo() {
     if (isset($_SESSION["sudo"])) {
-      $xx = "* [edit sidebar](?action=edit&page=sidebar)\n* [(not working) push to git repo](?gitpush)\n* [sudo panel](?action=sudo)\n* [logout](?action=sudo_exit)";
+      $xx = "* [edit sidebar](?action=edit&page=sidebar)\n\n* [sudo panel](?action=sudo)\n* [logout](?action=sudo_exit)";
     } else {
       $xx = "* [🔐 sudo mode (wip)](?action=sudo_auth)";
     }
