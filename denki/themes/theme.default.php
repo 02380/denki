@@ -6,7 +6,7 @@
     
     <style>
     <?php
-      echo file_get_contents("themes/theme.".$config['theme_name'].".css")
+      echo file_get_contents(get_ddir("themes/theme.".$config['theme_name'].".css"));
     ?>
     </style>
   </head>

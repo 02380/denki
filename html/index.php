@@ -1,6 +1,6 @@
 <?php
 	session_start();
-	require_once 'vendor/autoload.php';
+	require_once '../denki/vendor/autoload.php';
 ?>
 
  <?php
@@ -11,9 +11,10 @@
   }
   date_default_timezone_set('UTC');
 
-  $config = [
+  $GLOBALS["config"] = [
     "theme_name" => "default",
     "site_name" => "denki test",
+    "denki_dir" => "../denki/",
     "sudo_passwd" => ""
   ];
 
@@ -33,25 +34,27 @@
       return $results;
   }
 
-  function handle_first_time() {
-    chmod("./", 0777);
-    mkdir("pages");
-    mkdir("data");
-    mkdir("lib");
-    file_put_contents("pages/index.md", "Welcome to your new blank wiki!");
-    file_put_contents("pages/sidebar.md", "Welcome to your new blank wiki!");
-    chmod("./pages/*", 0777);
-    chmod("./lib/*", 0777);
+  function get_ddir($x) {
+    return $GLOBALS["config"]["denki_dir"].$x;
   }
 
-  if (file_exists("pages/index.md")) {
+  function handle_first_time() {
+    chmod("./", 0777);
+    mkdir(get_ddir("pages"));
+    chmod(get_ddir("./pages/*"), 0777);
+    file_put_contents(get_ddir("pages/config.json"), "{}");
+    file_put_contents(get_ddir("pages/index.md"), "Welcome to your new blank wiki!");
+    file_put_contents(get_ddir("pages/sidebar.md"), "Welcome to your new blank wiki!");
+  }
+
+  if (file_exists(get_ddir("pages/index.md"))) {
     // echo handle_page($GLOBALS["page"]);
   } else {
     handle_first_time();
   }
 
   function handle_log($n) {
-    file_put_contents("log.txt", $person, FILE_APPEND | LOCK_EX);
+    file_put_contents(get_ddir("log.txt"), $person, FILE_APPEND | LOCK_EX);
   }
 
   function needs_sudo_or_else() {
@@ -65,7 +68,7 @@
   function handle_page($n) {
     $Parsedown = new Parsedown();
     // $Parsedown->setMarkupEscaped(true);
-    $x = file_get_contents("pages/{$n}.md");
+    $x = file_get_contents(get_ddir("pages/{$n}.md"));
     if (substr( $x, 0, 5 ) === "SUDO!") {
       needs_sudo_or_else();
       $x = substr( $x, 5 );
@@ -74,7 +77,7 @@
   }
 
   function handle_page_plain($n) {
-    $x = file_get_contents("pages/{$n}.md");
+    $x = file_get_contents(get_ddir("pages/{$n}.md"));
     if (substr( $x, 0, 5 ) === "SUDO!") {
       needs_sudo_or_else();
       return $x;
@@ -88,10 +91,10 @@
     if (isset($_SESSION['sudo'])&&isset($_GET['sudo'])) { die("You are now logged in!");}
     switch ($GLOBALS["action"]) {
         case 'change':
-          file_put_contents("pages/{$GLOBALS["page"]}.md", $_POST['text_to_store']);
+          file_put_contents(get_ddir("pages/".$GLOBALS["page"].".md"), $_POST['text_to_store']);
           # code...
-          if (file_exists("pages/{$GLOBALS["page"]}.md")) {
-            echo handle_page($GLOBALS["page"]);
+          if (file_exists(get_ddir("pages/".$GLOBALS["page"].".md"))) {
+            echo "<meta http-equiv='refresh' content='0;url=./?view=".$GLOBALS["page"]."'>";
           } else {
             handle_death("no_file");
           }
@@ -99,7 +102,7 @@
         case 'sudo':
           needs_sudo_or_else();
           echo "<div class='sudo-pages'><h1>Sudo Page List</h1><ul>";
-          foreach (getDirContents('./pages') as &$value) {
+          foreach (getDirContents(get_ddir('./pages')) as &$value) {
             if (strpos($value, '.md') !== false) {
               $whatIWant = substr($value, strpos($value, "pages/") + 6);    
               echo "<li><a href='?action=edit&page=".substr($whatIWant, 0, -3)."'>{$whatIWant}</a></li>";
@@ -123,7 +126,7 @@
 
         case 'view':
           # code...
-          if (file_exists("pages/{$GLOBALS["page"]}.md")) {
+          if (file_exists(get_ddir("pages/".$GLOBALS["page"].".md"))) {
             echo handle_page($GLOBALS["page"]);
           } else {
             // handle_death("no_file");
@@ -134,7 +137,7 @@
 
         case 'edit':
           // needs_sudo_or_else();
-          if (file_exists("pages/{$GLOBALS["page"]}.md")) {
+          if (file_exists(get_ddir("pages/".$GLOBALS["page"].".md"))){
            $edit_window = '<form action="?action=change&page='.$GLOBALS["page"].'" method="post"><div id="editbox" class="editbox"><textarea name="text_to_store" id="edit_data">'.handle_page_plain($GLOBALS["page"]).'</textarea><div class="e"><ul class="editbar"><li class="editbar-item">You are editing this page.</li><li class="editbar-item"><button type="submit" class="button">💾 Save</button></li></ul></div></div>';
             echo $edit_window;
           }
@@ -146,7 +149,7 @@
       }
   }
   function handle_date_meta($page) {
-    $x = filemtime("pages/".$GLOBALS["page"].".md");
+    $x = filemtime(get_ddir("pages/".$GLOBALS["page"].".md"));
     if ($x == true) {
       echo date("F d Y H:i:s.", $x);
     }
@@ -165,7 +168,7 @@
   function handle_sidebar() {
     $Parsedown = new Parsedown();
     // $Parsedown->setMarkupEscaped(true);
-    $x = file_get_contents("pages/sidebar.md");
+    $x = file_get_contents(get_ddir("pages/sidebar.md"));
 
     return $Parsedown->text($x);
   }
@@ -206,6 +209,9 @@
       }
     }
   }
-
-  require("themes/theme.".$config['theme_name'].".php")
+  if (isset($GLOBALS["config"]["theme_name"])) {
+  require(get_ddir("themes/theme.".$config['theme_name'].".php"));
+  } else {
+    require "page.php";
+  }
 ?>
