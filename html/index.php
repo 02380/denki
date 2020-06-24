@@ -16,6 +16,12 @@
     "site_name" => "denki test",
     "denki_dir" => "../denki/",
     "lang" => "en-gb",
+    "sudo_permissions" => [
+      "edit" => false,
+      "change" => false,
+      "new_page" => false,
+      "view" => false
+    ],
     "sudo_passwd" => ""
   ];
   function get_ddir($x) {
@@ -80,18 +86,39 @@ $GLOBALS["denki_text_strings"] = [
   "en-gb" => [
     "setup1" => "## Denki setup procedure\nWelcome to Denki - the barebones Markdown-powered site renderer.\nYou need to fill in some details and set up a sudo password. There are currently no users or permissions with Denki.",
     "setup2" => "## 😊 Denki has been set up! 😊\nIt's all ready to go! Thank you for choosing Denki! This page will redirect you shortly...",
+    "setup_enter_site_name" => "Enter your site name:",
     "placeholder_index" => "Hello, world! Welcome to this cool website!",
     "placeholder_sidebar" => "Edit me in sudo mode!",
     "sudo" => "You lack authorisation! Log in as sudo in order to perform this task.",
-    "editing_this" => "You are editing this page."
+    "editing_this" => "You are editing this page.",
+    "config_saved" => "Changes saved to the denki config!"
   ],
+  // french is my 2nd language so apologies for mistakes
   "fr-fr" => [
-    "setup1" => "## Denki procédure d'installation \nBienvenue a Denki - le SGC facile et barebones, amelite par Markdown.\nVous devez remplir la formulaire et crée un mot de passe, pour la mode sudo.",
+    "fallback" => "en-gb",
+    "setup1" => "## Denki procédure d'installation \nBienvenue a Denki - le SGC facile et barebones, amelité par Markdown.\nVous devez remplir la formulaire et crée un mot de passe, pour la mode sudo.",
     "setup2" => "## 😊 Denki est installé! 😊",
     "placeholder_index" => "Bonjour à tous, bienvenue sur ce site cool!",
     "placeholder_sidebar" => "Modifiez-moi sur la mode sudo!",
     "sudo" => "La mode *sudo* est besoin ici.",
-    "editing_this" => "You are editing this page."
+    "setup_enter_site_name" => "Nom de site Web:",
+    "editing_this" => "Vous modifiez actuellement cette page.",
+    "config_saved" => "Changements sauvegardés à la config!"
+  ],
+  "fr-ca" => [
+    "fallback" => "fr-fr",
+  ],
+  // dutch is my 3rd language so apologies for mistakes
+  "nl-nl" => [
+    "fallback" => "en-gb",
+    "setup1" => "## Denki setup \nWelkom bij Denki - een makkelijk en basis content-beheersysteem, verbeterd door Markdown\nU moet invullen dit form, en voor het sudo-mode crëer uw wachtwoord u moet.",
+    "setup2" => "## 😊 Denki heeft geïnstalleerd! 😊 Dankjewel voor het gebruiken Denki!",
+    "placeholder_index" => "Welkom dames en heren! Dit is mijn supercool website!",
+    "placeholder_sidebar" => "Bewerk-mij op de sudo-mode!",
+    "sudo" => "U moet toestemming voor sudo mode hebben!",
+    "setup_enter_site_name" => "Uw site-naam:",
+    "editing_this" => "U bewerkt deze pagina.",
+    "config_saved" => "Config opgeslagen."
   ]
 ];
 
@@ -102,16 +129,22 @@ function d_textstring($n) {
 function handle_first_time() {
   // when you run denki on a clean install you should see thuis page.
   // set the sudo mode to true because we're in development here!
+  if (isset($_GET['lang'])) {
+    $GLOBALS["config"]["lang"] = $_GET["lang"];
+  }
   $_SESSION['sudo']=true;
   $Parsedown = new Parsedown();
   // echo $GLOBALS["denki_text_strings"]["en-gb"];
   render_basic_modal(
+    '<a href="?lang=en-gb"><span class="flag flag-gb"></span></a>'.
+    '<a href="?lang=fr-fr"><span class="flag flag-fr"></span></a>'.
+    '<a href="?lang=nl-nl"><span class="flag flag-nl"></span></a>'.
       $Parsedown->text(d_textstring("setup1")).
       '<form action="?config=config&init" method="post">
       Enter your site name: <input name="config_site_name" type="text" placeholder="Site name"/><br>
       Enter your sudo password: <input name="config_sudo_passwd" type="text" placeholder="toor"/><br>
       <button type="submit">Submit</button>
-      </form>');
+      </form>'.'<style>a{margin:2%}span.flag{width:44px;height:30px;display:inline-block}img.flag{height:100%;width:30px}.flag{background:url('.get_ddir("flags.png").')}.flag-gb,.flag-uk{background-position:0 92.561983%}.flag-nl{background-position:0 65.289256%}.flag-fr{background-position:0 29.752066%}.flag-de{background-position:0 22.31405%}.flag-ru{background-position:0 75.206612%}.flag-pt{background-position:0 72.31405%}.flag-is{background-position:0 42.561983%}.flag-it{background-position:0 42.975207%}</style>');
   die($setup_str);
 }
 
@@ -132,7 +165,7 @@ function handle_first_time() {
       render_basic_modal($Parsedown->text(d_textstring("setup2"))."<meta http-equiv='refresh' content='2;url=./'>");
       die("");
     } else {
-      echo "Changes saved to the denki config!";
+      echo d_textstring("config_saved");
     }
   }
   if (file_exists(get_ddir("pages/index.md"))) {
@@ -161,6 +194,12 @@ function handle_first_time() {
       needs_sudo_or_else();
       $x = substr( $x, 5 );
     } 
+    $doc = new DOMDocument();
+    $doc->loadHTML($x);    
+    $selector = new DOMXPath($doc);
+
+    $result = $selector->query('sudo');
+    echo $result;
     return $Parsedown->text($x);
   }
 
