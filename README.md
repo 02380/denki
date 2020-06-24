@@ -1,6 +1,6 @@
 # denki: flashback to php
 
-denki is a flexible little php content management system designed for extremely simple and basic web deployment. It's designed to load pages quickly and that's about it. I use it for the internal wikis and knowledgebases for [surge radio](http//surgeradio.co.uk) and [SUSUtv](http://susu.tv).
+denki is a flexible little php content management system designed for extremely simple and basic web deployment. It's designed to load pages quickly and that's about it. I use it for the internal wikis and knowledgebases for [surge radio](http://surgeradio.co.uk) and [SUSUtv](http://susu.tv).
 
 powered by parsedown and php.
 
