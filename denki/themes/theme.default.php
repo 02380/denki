@@ -5,9 +5,9 @@
     <title><?php echo $config["site_name"]; ?></title>
     
     <style>
-    <?php
-      echo file_get_contents(get_ddir("themes/theme.".$config['theme_name'].".css"));
-    ?>
+      <?php
+        echo file_get_contents(get_ddir("themes/theme.".$config['theme_name'].".css"));
+      ?>
     </style>
   </head>
   <body>
