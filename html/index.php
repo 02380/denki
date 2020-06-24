@@ -194,12 +194,12 @@ function handle_first_time() {
       needs_sudo_or_else();
       $x = substr( $x, 5 );
     } 
-    $doc = new DOMDocument();
-    $doc->loadHTML($x);    
-    $selector = new DOMXPath($doc);
+    // $doc = new DOMDocument();
+    // $doc->loadHTML($x);    
+    // $selector = new DOMXPath($doc);
 
-    $result = $selector->query('sudo');
-    echo $result;
+    // $result = $selector->query('sudo');
+    // echo $result;
     return $Parsedown->text($x);
   }
 
